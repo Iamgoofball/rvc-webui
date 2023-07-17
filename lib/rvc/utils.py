@@ -16,7 +16,7 @@ from torch.nn import functional as F
 from modules.shared import ROOT_DIR
 
 from .config import TrainConfig
-
+import librosa
 matplotlib.use("Agg")
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
@@ -26,21 +26,13 @@ logger = logging
 
 def load_audio(file: str, sr):
     try:
-        # https://github.com/openai/whisper/blob/main/whisper/audio.py#L26
-        # This launches a subprocess to decode audio while down-mixing and resampling as necessary.
-        # Requires the ffmpeg CLI and `ffmpeg-python` package to be installed.
-        file = (
-            file.strip(" ").strip('"').strip("\n").strip('"').strip(" ")
-        )  # Prevent small white copy path head and tail with spaces and " and return
-        out, _ = (
-            ffmpeg.input(file, threads=0)
-            .output("-", format="f32le", acodec="pcm_f32le", ac=1, ar=sr)
-            .run(cmd=["ffmpeg", "-nostdin"], capture_stdout=True, capture_stderr=True)
-        )
-    except Exception as e:
-        raise RuntimeError(f"Failed to load audio: {e}")
-
-    return np.frombuffer(out, np.float32).flatten()
+        audio, _ = librosa.load(file, sr=sr)
+        mono_audio = librosa.to_mono(audio)
+        mono_audio = mono_audio.astype(np.float32).flatten()
+    except:
+        mono_audio = "BAD_FILE"
+        print(f"Failed to load {file}; librosa failed to parse it. It's recommended to check this data for errors.")
+    return mono_audio
 
 
 def find_empty_port():

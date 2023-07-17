@@ -57,6 +57,7 @@ def glob_dataset(
     recursive: bool = True,
 ):
     globs = glob_str.split(",")
+    audio_count_total = 0
     speaker_count = 0
     datasets_speakers = []
     speaker_to_id_mapping = {}
@@ -76,11 +77,14 @@ def glob_dataset(
                 for dir in tqdm.tqdm(os.listdir(glob_str)):
                     print("Speaker ID " + str(speaker_count) + ": " + dir)
                     speaker_to_id_mapping[dir] = speaker_count
-                    speaker_path = glob_str + "/" + dir
+                    speaker_path = glob_str + "\\" + dir
                     for audio in tqdm.tqdm(os.listdir(speaker_path)):
-                        if is_audio_file(glob_str + "/" + dir + "/" + audio):
-                            datasets_speakers.append((glob_str + "/" + dir + "/" + audio, speaker_count))
+                        if is_audio_file(glob_str + "\\" + dir + "\\" + audio):
+                            datasets_speakers.append((glob_str + "\\" + dir + "\\" + audio, speaker_count))
+                            audio_count_total += 1
                     speaker_count += 1
+                print(len(datasets_speakers))
+                print(audio_count_total)
                 with open("./speaker_info.json", "w") as outfile:
                     print("Dumped speaker info to ./speaker_info.json")
                     json.dump(speaker_to_id_mapping, outfile)
